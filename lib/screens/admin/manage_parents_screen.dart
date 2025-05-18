@@ -293,10 +293,11 @@ class _ManageParentsScreenState extends ConsumerState<ManageParentsScreen> {
                                   _deleteParent(parent);
                                   break;
                                 case 'view_payments':
+                                  ref.read(selectedParentProvider.notifier).state = parent;
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const ParentDashboard(),
+                                      builder: (context) => const ParentDashboard(isAdmin: true),
                                     ),
                                   );
                                   break;

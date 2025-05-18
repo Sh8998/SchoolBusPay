@@ -37,7 +37,7 @@ class PaymentService {
             parentId: parent.id,
             month: currentMonth,
             year: currentYear,
-            amount: 0.0, // Default amount, to be set by driver
+            amount: 1000.0, // Default amount of 1000
             isPaid: false,
             dueDate: lastDay.toIso8601String(),
             paidDate: null, // Initially null until payment is made

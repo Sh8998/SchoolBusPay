@@ -6,11 +6,19 @@ import '../models/payment.dart';
 import '../providers/app_state.dart';
 
 class ParentDashboard extends ConsumerWidget {
-  const ParentDashboard({super.key});
+  final bool isAdmin;
+  
+  const ParentDashboard({
+    super.key,
+    this.isAdmin = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final parentAsync = ref.watch(firstParentProvider);
+    final selectedParent = ref.watch(selectedParentProvider);
+    final parentAsync = isAdmin && selectedParent != null
+        ? AsyncValue.data(selectedParent)
+        : ref.watch(firstParentProvider);
 
     return Scaffold(
       appBar: AppBar(

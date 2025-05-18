@@ -111,6 +111,8 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
                   }
 
                   ref.invalidate(driversProvider);
+                  ref.invalidate(firstDriverProvider);
+
                   if (mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -180,6 +182,7 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
         final database = ref.read(databaseProvider);
         await database.deleteDriver(driver.id);
         ref.invalidate(driversProvider);
+        ref.invalidate(firstDriverProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Driver deleted successfully')),

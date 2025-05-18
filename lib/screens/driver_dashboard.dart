@@ -11,12 +11,20 @@ class DriverDashboard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Refresh the firstDriverProvider when the screen is built
+    ref.invalidate(firstDriverProvider);
     final driverAsync = ref.watch(firstDriverProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Driver Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              ref.invalidate(firstDriverProvider);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => Navigator.pop(context),
@@ -26,8 +34,36 @@ class DriverDashboard extends ConsumerWidget {
       body: driverAsync.when(
         data: (driver) {
           if (driver == null) {
-            return const Center(
-              child: Text('No driver records found. Please contact admin.'),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No driver records found',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Please contact admin to set up your account',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.invalidate(firstDriverProvider);
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Refresh'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
             );
           }
 
