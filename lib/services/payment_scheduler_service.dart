@@ -48,7 +48,7 @@ class PaymentSchedulerService {
 
       for (final parent in parents) {
         // Check if payment record already exists for this month
-        final existingPayments = await _database.getPaymentsByParentId(parent.id);
+        final existingPayments = await _database.getPaymentsByParentId(parent.id as int);
         final hasPaymentForMonth = existingPayments.any(
           (payment) => payment.month == now.month && payment.year == now.year,
         );
@@ -57,7 +57,7 @@ class PaymentSchedulerService {
         if (!hasPaymentForMonth) {
           final payment = Payment(
             id: 0,
-            parentId: parent.id,
+            parentId: parent.id as int,
             month: now.month,
             year: now.year,
             amount: 0.0, // Default amount, to be set by driver

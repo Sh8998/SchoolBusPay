@@ -1,8 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/database_helper.dart';
 import '../models/payment.dart';
 import '../models/parent.dart';
-import '../providers/app_state.dart';
 
 class PaymentService {
   final DatabaseHelper _database;
@@ -25,7 +23,7 @@ class PaymentService {
       // Create payment records for each parent
       for (final parent in parents) {
         // Check if payment record already exists for this month
-        final existingPayments = await _database.getPaymentsByParentId(parent.id);
+        final existingPayments = await _database.getPaymentsByParentId(parent.id as int);
         final hasPaymentForMonth = existingPayments.any(
           (payment) => payment.month == currentMonth && payment.year == currentYear,
         );
@@ -34,7 +32,7 @@ class PaymentService {
         if (!hasPaymentForMonth) {
           final payment = Payment(
             id: 0, // Auto-generated
-            parentId: parent.id,
+            parentId: parent.id as int,
             month: currentMonth,
             year: currentYear,
             amount: 1000.0, // Default amount of 1000
@@ -71,7 +69,7 @@ class PaymentService {
   }
 }
 
-final paymentServiceProvider = Provider((ref) {
-  final database = ref.read(databaseProvider);
-  return PaymentService(database);
-}); 
+// final paymentServiceProvider = Provider((ref) {
+//   final database = ref.read(databaseProvider);
+//   return PaymentService(database);
+// }); 

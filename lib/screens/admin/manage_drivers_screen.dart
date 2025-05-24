@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/driver.dart';
 import '../../providers/app_state.dart';
 import '../../widgets/error_dialog.dart';
@@ -25,7 +26,9 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
     super.dispose();
   }
 
-  void _showDriverDialog({Driver? driver}) {
+  void _showDriverDialog({Driver? driverToEdit}) {
+    final driver = driverToEdit;
+    
     if (driver != null) {
       _nameController.text = driver.name;
       _busNoController.text = driver.busNo;
@@ -94,10 +97,10 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
               if (_formKey.currentState!.validate()) {
                 try {
                   ref.read(isLoadingProvider.notifier).state = true;
-                  final database = ref.read(databaseProvider);
+                  final firebaseService = ref.read(firebaseServiceProvider);
 
-                  final updatedDriver = Driver(
-                    id: driver?.id ?? 0,
+                  final newDriver = Driver(
+                    id: driver?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
                     name: _nameController.text,
                     busNo: _busNoController.text,
                     mobileNumber: _mobileNumberController.text,
@@ -105,13 +108,10 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
                   );
 
                   if (driver == null) {
-                    await database.insertDriver(updatedDriver);
+                    await firebaseService.addDriver(newDriver);
                   } else {
-                    await database.updateDriver(updatedDriver);
+                    await firebaseService.updateDriver(newDriver);
                   }
-
-                  ref.invalidate(driversProvider);
-                  ref.invalidate(firstDriverProvider);
 
                   if (mounted) {
                     Navigator.pop(context);
@@ -132,9 +132,7 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
                       context: context,
                       builder: (context) => ErrorDialog(
                         message: e.toString(),
-                        onRetry: () {
-                          // Retry logic
-                        },
+                        onRetry: () {},
                       ),
                     );
                   }
@@ -179,10 +177,23 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
     if (confirmed == true && mounted) {
       try {
         ref.read(isLoadingProvider.notifier).state = true;
-        final database = ref.read(databaseProvider);
-        await database.deleteDriver(driver.id);
-        ref.invalidate(driversProvider);
-        ref.invalidate(firstDriverProvider);
+        final firebaseService = ref.read(firebaseServiceProvider);
+        
+        // First unassign all parents
+        final parents = await firebaseService.getParents().first;
+        final batch = FirebaseFirestore.instance.batch();
+        
+        for (final parent in parents.where((p) => p.driverId == driver.id)) {
+          batch.update(FirebaseFirestore.instance.collection('parents').doc(parent.id), {
+            'driverId': ''
+          });
+        }
+        
+        await batch.commit();
+        
+        // Then delete the driver
+        await firebaseService.deleteDriver(driver.id);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Driver deleted successfully')),
@@ -195,9 +206,7 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
             context: context,
             builder: (context) => ErrorDialog(
               message: e.toString(),
-              onRetry: () {
-                // Retry logic
-              },
+              onRetry: () {},
             ),
           );
         }
@@ -250,10 +259,8 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
                           leading: Hero(
                             tag: 'driver_${driver.id}',
                             child: CircleAvatar(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                              child: const Icon(Icons.drive_eta,
-                                  color: Colors.white),
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              child: const Icon(Icons.drive_eta, color: Colors.white),
                             ),
                           ),
                           title: Text(driver.name),
@@ -273,7 +280,7 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
                             onSelected: (value) {
                               switch (value) {
                                 case 'edit':
-                                  _showDriverDialog(driver: driver);
+                                  _showDriverDialog(driverToEdit: driver);
                                   break;
                                 case 'delete':
                                   _deleteDriver(driver);
@@ -311,4 +318,4 @@ class _ManageDriversScreenState extends ConsumerState<ManageDriversScreen> {
       ),
     );
   }
-} 
+}

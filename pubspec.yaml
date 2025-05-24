@@ -43,7 +43,9 @@ dependencies:
   intl: ^0.18.1
   lottie: ^2.7.0
   flutter_riverpod: ^2.4.9
-
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  cloud_firestore: ^5.6.8
 dev_dependencies:
   flutter_test:
     sdk: flutter
