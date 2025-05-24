@@ -1,36 +1,63 @@
 class Parent {
-  final int id;
+  final String id;
   final String name;
   final String mobileNumber;
-  final int driverId;
-  final List<int> paymentIds;
+  final String driverId;
+  final int noOfChildren;
+  final double pendingFees;
+  final List<String> paymentIds;
 
   Parent({
     required this.id,
     required this.name,
     required this.mobileNumber,
-    required this.driverId,
-    required this.paymentIds,
+    this.driverId = '',
+    this.noOfChildren = 1,
+    this.pendingFees = 0,
+    this.paymentIds = const [],
   });
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      if (id != 0) 'id': id,
+    return {
+      'id': id,
       'name': name,
       'mobileNumber': mobileNumber,
       'driverId': driverId,
-      'paymentIds': paymentIds.isEmpty ? '' : paymentIds.join(','),
+      'noOfChildren': noOfChildren,
+      'pendingFees': pendingFees,
+      'paymentIds': paymentIds,
     };
   }
 
   factory Parent.fromMap(Map<String, dynamic> map) {
-    final paymentIdsStr = map['paymentIds']?.toString() ?? '';
     return Parent(
-      id: map['id'] as int? ?? 0,
-      name: map['name'] as String? ?? '',
-      mobileNumber: map['mobileNumber'] as String? ?? '',
-      driverId: map['driverId'] as int? ?? 0,
-      paymentIds: paymentIdsStr.isEmpty ? [] : paymentIdsStr.split(',').map((e) => int.parse(e)).toList(),
+      id: map['id'] as String,
+      name: map['name'] as String,
+      mobileNumber: map['mobileNumber'] as String,
+      driverId: map['driverId'] as String? ?? '',
+      noOfChildren: map['noOfChildren'] as int? ?? 1,
+      pendingFees: (map['pendingFees'] as num?)?.toDouble() ?? 0,
+      paymentIds: List<String>.from(map['paymentIds'] ?? []),
     );
   }
-} 
+
+  Parent copyWith({
+    String? id,
+    String? name,
+    String? mobileNumber,
+    String? driverId,
+    int? noOfChildren,
+    double? pendingFees,
+    List<String>? paymentIds,
+  }) {
+    return Parent(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      mobileNumber: mobileNumber ?? this.mobileNumber,
+      driverId: driverId ?? this.driverId,
+      noOfChildren: noOfChildren ?? this.noOfChildren,
+      pendingFees: pendingFees ?? this.pendingFees,
+      paymentIds: paymentIds ?? this.paymentIds,
+    );
+  }
+}

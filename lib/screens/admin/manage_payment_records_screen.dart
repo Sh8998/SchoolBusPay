@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../models/payment.dart';
 import '../../models/parent.dart';
 import '../../providers/app_state.dart';
@@ -115,22 +114,12 @@ class _ManagePaymentRecordsScreenState extends ConsumerState<ManagePaymentRecord
 
   Future<void> _markAsPaid(Payment payment, Parent parent) async {
     try {
-      final updatedPayment = Payment(
-        id: payment.id,
-        parentId: payment.parentId,
-        month: payment.month,
-        year: payment.year,
-        amount: payment.amount,
-        isPaid: true,
-        dueDate: payment.dueDate,
-        paidDate: DateTime.now().toIso8601String(),
-      );
 
-      final database = ref.read(databaseProvider);
-      await database.updatePayment(updatedPayment);
+      // final database = ref.read(databaseProvider);
+      // await database.updatePayment(updatedPayment);
 
-      // Refresh the payments list
-      ref.invalidate(paymentsByParentProvider(payment.parentId));
+      // // Refresh the payments list
+      // ref.invalidate(paymentsByParentProvider(payment.parentId));
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -155,14 +144,14 @@ class _ManagePaymentRecordsScreenState extends ConsumerState<ManagePaymentRecord
 
   @override
   Widget build(BuildContext context) {
-    final paymentsAsync = ref.watch(parentsProvider).whenData((parents) async {
-      final database = ref.read(databaseProvider);
+    ref.watch(parentsProvider).whenData((parents) async {
+      // final database = ref.read(databaseProvider);
       final allPayments = <Payment>[];
       
-      for (final parent in parents) {
-        final payments = await database.getPaymentsByParentId(parent.id);
-        allPayments.addAll(payments);
-      }
+      // for (final parent in parents) {
+      //   final payments = await database.getPaymentsByParentId(parent.id as int);
+      //   allPayments.addAll(payments);
+      // }
 
       // Filter payments based on search query and other filters
       return allPayments.where((payment) {
@@ -259,111 +248,111 @@ class _ManagePaymentRecordsScreenState extends ConsumerState<ManagePaymentRecord
               ],
             ),
           ),
-          Expanded(
-            child: paymentsAsync.when(
-              data: (futurePayments) => FutureBuilder(
-                future: futurePayments,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final payments = snapshot.data!;
-                    if (payments.isEmpty) {
-                      return const Center(
-                        child: Text('No payments found'),
-                      );
-                    }
+          // Expanded(
+          //   child: paymentsAsync.when(
+          //     data: (futurePayments) => FutureBuilder(
+          //       future: futurePayments,
+          //       builder: (context, snapshot) {
+          //         if (snapshot.hasData) {
+          //           final payments = snapshot.data!;
+          //           if (payments.isEmpty) {
+          //             return const Center(
+          //               child: Text('No payments found'),
+          //             );
+          //           }
 
-                    return ListView.builder(
-                      itemCount: payments.length,
-                      itemBuilder: (context, index) {
-                        final payment = payments[index];
-                        return FutureBuilder(
-                          future: ref
-                              .read(databaseProvider)
-                              .getParents()
-                              .then((parents) => parents.firstWhere(
-                                  (p) => p.id == payment.parentId)),
-                          builder: (context, parentSnapshot) {
-                            if (!parentSnapshot.hasData) {
-                              return const SizedBox.shrink();
-                            }
-                            final parent = parentSnapshot.data!;
+          //           return ListView.builder(
+          //             itemCount: payments.length,
+          //             itemBuilder: (context, index) {
+          //               final payment = payments[index];
+          //               return FutureBuilder(
+          //                 future: ref
+          //                     // .read(databaseProvider)
+          //                     .getParents()
+          //                     .then((parents) => parents.firstWhere(
+          //                         (p) => p.id == payment.parentId)),
+          //                 builder: (context, parentSnapshot) {
+          //                   if (!parentSnapshot.hasData) {
+          //                     return const SizedBox.shrink();
+          //                   }
+          //                   final parent = parentSnapshot.data!;
 
-                            return Card(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: payment.isPaid
-                                      ? Colors.green
-                                      : Colors.orange,
-                                  child: Icon(
-                                    payment.isPaid
-                                        ? Icons.check
-                                        : Icons.pending,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                title: Text(parent.name),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Mobile: ${parent.mobileNumber}'),
-                                    Text(
-                                      'Month: ${DateFormat('MMMM yyyy').format(DateTime(payment.year, payment.month))}',
-                                    ),
-                                    Text('Amount: ₹${payment.amount}'),
-                                    Text(
-                                      'Due: ${DateFormat('dd MMM yyyy').format(DateTime.parse(payment.dueDate))}',
-                                    ),
-                                    if (payment.paidDate != null)
-                                      Text(
-                                        'Paid on: ${DateFormat('dd MMM yyyy').format(DateTime.parse(payment.paidDate!))}',
-                                        style: const TextStyle(color: Colors.green),
-                                      ),
-                                  ],
-                                ),
-                                trailing: payment.isPaid
-                                    ? const Chip(
-                                        label: Text('PAID'),
-                                        backgroundColor: Colors.green,
-                                        labelStyle: TextStyle(color: Colors.white),
-                                      )
-                                    : TextButton.icon(
-                                        onPressed: () => _markAsPaid(payment, parent),
-                                        icon: const Icon(Icons.pending_actions),
-                                        label: const Text('UNPAID'),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Colors.orange,
-                                        ),
-                                      ),
-                                isThreeLine: true,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  }
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                },
-              ),
-              error: (error, stackTrace) => Center(
-                child: ErrorDialog(
-                  message: error.toString(),
-                  onRetry: () => ref.invalidate(parentsProvider),
-                ),
-              ),
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          ),
+          //                   return Card(
+          //                     margin: const EdgeInsets.symmetric(
+          //                       horizontal: 16,
+          //                       vertical: 8,
+          //                     ),
+          //                     child: ListTile(
+          //                       leading: CircleAvatar(
+          //                         backgroundColor: payment.isPaid
+          //                             ? Colors.green
+          //                             : Colors.orange,
+          //                         child: Icon(
+          //                           payment.isPaid
+          //                               ? Icons.check
+          //                               : Icons.pending,
+          //                           color: Colors.white,
+          //                         ),
+          //                       ),
+          //                       title: Text(parent.name),
+          //                       subtitle: Column(
+          //                         crossAxisAlignment: CrossAxisAlignment.start,
+          //                         children: [
+          //                           Text('Mobile: ${parent.mobileNumber}'),
+          //                           Text(
+          //                             'Month: ${DateFormat('MMMM yyyy').format(DateTime(payment.year, payment.month))}',
+          //                           ),
+          //                           Text('Amount: ₹${payment.amount}'),
+          //                           Text(
+          //                             'Due: ${DateFormat('dd MMM yyyy').format(DateTime.parse(payment.dueDate))}',
+          //                           ),
+          //                           if (payment.paidDate != null)
+          //                             Text(
+          //                               'Paid on: ${DateFormat('dd MMM yyyy').format(DateTime.parse(payment.paidDate!))}',
+          //                               style: const TextStyle(color: Colors.green),
+          //                             ),
+          //                         ],
+          //                       ),
+          //                       trailing: payment.isPaid
+          //                           ? const Chip(
+          //                               label: Text('PAID'),
+          //                               backgroundColor: Colors.green,
+          //                               labelStyle: TextStyle(color: Colors.white),
+          //                             )
+          //                           : TextButton.icon(
+          //                               onPressed: () => _markAsPaid(payment, parent),
+          //                               icon: const Icon(Icons.pending_actions),
+          //                               label: const Text('UNPAID'),
+          //                               style: TextButton.styleFrom(
+          //                                 foregroundColor: Colors.orange,
+          //                               ),
+          //                             ),
+          //                       isThreeLine: true,
+          //                     ),
+          //                   );
+          //                 },
+          //               );
+          //             },
+          //           );
+          //         }
+          //         return const Center(
+          //           child: CircularProgressIndicator(),
+          //         );
+          //       },
+          //     ),
+          //     error: (error, stackTrace) => Center(
+          //       child: ErrorDialog(
+          //         message: error.toString(),
+          //         onRetry: () => ref.invalidate(parentsProvider),
+          //       ),
+          //     ),
+          //     loading: () => const Center(
+          //       child: CircularProgressIndicator(),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
   }
-} 
+}

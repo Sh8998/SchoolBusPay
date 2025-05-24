@@ -1,36 +1,35 @@
 class Driver {
-  final int id;
+  final String id;
   final String name;
   final String busNo;
   final String mobileNumber;
-  final List<int> parentIds;
+  final List<String> parentIds; 
 
   Driver({
     required this.id,
     required this.name,
     required this.busNo,
     required this.mobileNumber,
-    required this.parentIds,
+    this.parentIds = const [],
   });
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      if (id != 0) 'id': id,
+    return {
+      'id': id,
       'name': name,
       'busNo': busNo,
       'mobileNumber': mobileNumber,
-      'parentIds': parentIds.isEmpty ? '' : parentIds.join(','),
+      'parentIds': parentIds,
     };
   }
 
   factory Driver.fromMap(Map<String, dynamic> map) {
-    final parentIdsStr = map['parentIds'].toString();
     return Driver(
-      id: map['id'] as int,
+      id: map['id'] as String,
       name: map['name'] as String,
       busNo: map['busNo'] as String,
       mobileNumber: map['mobileNumber'] as String,
-      parentIds: parentIdsStr.isEmpty ? [] : parentIdsStr.split(',').map((e) => int.parse(e)).toList(),
+      parentIds: List<String>.from(map['parentIds'] ?? []),
     );
   }
-} 
+}
